@@ -1,137 +1,225 @@
-#include <iostream>
+//Divya Kambaria
+#include<bits/stdc++.h>
 using namespace std;
 
-char square[10] = {'o','1','2','3','4','5','6','7','8','9'};
+struct Move
+{
+	int row, col;
+};
+//  x is maximizer 
+//  0 is minimizer
+char player = 'x', opponent = 'o';
 
-int checkwin();
-void board();
+// This function returns true if there are moves
+// remaining on the board. It returns false if
+// there are no moves left to play.
+bool isMovesLeft(char board[3][3])
+{
+	for (int i = 0; i<3; i++)
+		for (int j = 0; j<3; j++)
+			if (board[i][j]=='_')
+				return true;
+	return false;
+}
 
+
+int evaluate(char b[3][3])
+{
+	// Checking for Rows for X or O victory.
+	for (int row = 0; row<3; row++)
+	{
+		if (b[row][0]==b[row][1] &&
+			b[row][1]==b[row][2])
+		{
+			if (b[row][0]==player)
+				return +10;
+			else if (b[row][0]==opponent)
+				return -10;
+		}
+	}
+
+	// Checking for Columns for X or O victory.
+	for (int col = 0; col<3; col++)
+	{
+		if (b[0][col]==b[1][col] &&
+			b[1][col]==b[2][col])
+		{
+			if (b[0][col]==player)
+				return +10;
+
+			else if (b[0][col]==opponent)
+				return -10;
+		}
+	}
+
+	// Checking for Diagonals for X or O victory.
+	if (b[0][0]==b[1][1] && b[1][1]==b[2][2])
+	{
+		if (b[0][0]==player)
+			return +10;
+		else if (b[0][0]==opponent)
+			return -10;
+	}
+
+	if (b[0][2]==b[1][1] && b[1][1]==b[2][0])
+	{
+		if (b[0][2]==player)
+			return +10;
+		else if (b[0][2]==opponent)
+			return -10;
+	}
+
+	// Else if none of them have won then return 0
+	return 0;
+}
+
+// This is the minimax function. It considers all
+// the possible ways the game can go and returns
+// the value of the board
+int minimax(char board[3][3], int depth, bool isMax)
+{
+	int score = evaluate(board);
+
+	// If Maximizer has won the game return player's
+	// evaluated score
+	if (score == 10)
+		return score;
+
+	// If Minimizer has won the game return his/her
+	// evaluated score
+	if (score == -10)
+		return score;
+
+	// If there are no more moves and no winner then
+	// it is a tie
+	if (isMovesLeft(board)==false)
+		return 0;
+
+	// If this maximizer's move
+	if (isMax)
+	{
+
+		int best = INT_MIN;
+
+		// Traverse all cells
+		for (int i = 0; i<3; i++)
+		{
+			for (int j = 0; j<3; j++)
+			{
+				// Check if cell is empty
+				if (board[i][j]=='_')
+				{
+					// Make the move
+					board[i][j] = player;//its 'X'
+
+					// Call minimax recursively and choose
+					// the maximum value
+					best = max( best,
+						minimax(board, depth+1, !isMax) );
+
+					// Undo the move
+					board[i][j] = '_';
+				}
+			}
+		}
+		return best;
+	}
+
+	// If this minimizer's move
+	else
+	{
+		int best = INT_MAX;
+
+		// Traverse all cells
+		for (int i = 0; i<3; i++)
+		{
+			for (int j = 0; j<3; j++)
+			{
+				// Check if cell is empty
+				if (board[i][j]=='_')
+				{
+					// Make the move
+					board[i][j] = opponent;// its "O"
+
+					// Call minimax recursively and choose
+					// the minimum value
+					best = min(best,
+						minimax(board, depth+1, !isMax));
+
+					// Undo the move
+					board[i][j] = '_';
+				}
+			}
+		}
+		return best;
+	}
+}
+
+// This will return the best possible move for the player
+Move findBestMove(char board[3][3])
+{
+	int bestVal = INT_MIN;
+	Move bestMove;
+	bestMove.row = -1;
+	bestMove.col = -1;
+
+	// Traverse all cells, evaluate minimax function for
+	// all empty cells. And return the cell with optimal
+	// value.
+	for (int i = 0; i<3; i++)
+	{
+		for (int j = 0; j<3; j++)
+		{
+			// Check if cell is empty
+			if (board[i][j]=='_')
+			{
+				// Make the move
+				board[i][j] = player;
+
+				// compute evaluation function for this
+				// move.
+				int moveval = minimax(board, 0, false);//next turn is of 'O' (minimizer)
+
+				// Undo the move
+				board[i][j] = '_';
+
+				// If the value of the current move is
+				// more than the best value, then update
+				// best/
+				if (moveval > bestVal)
+				{
+					bestMove.row = i;
+					bestMove.col = j;
+					bestVal = moveval;
+				}
+			}
+		}
+	}
+
+	printf("The value of the best Move is : %d\n\n",
+			bestVal);
+
+	return bestMove;
+}
+
+// Driver code
 int main()
 {
-	int player = 1,i,choice;
+	#ifndef ONLINE_JUDGE
+      freopen("input.txt", "r", stdin);
+      freopen("output.txt", "w", stdout);
+     #endif
+	char board[3][3] =
+	{
+		{ 'x', 'o', 'o' },
+		{ 'o', 'x', 'x' },
+		{ '_', '_', '_' }
+	};
 
-    char mark;
-    do
-    {
-        board();
-        player=(player%2)?1:2;
+	Move bestMove = findBestMove(board);
 
-        cout << "Player " << player << ", enter a number:  ";
-        cin >> choice;
-
-        mark=(player == 1) ? 'X' : 'O';
-
-        if (choice == 1 && square[1] == '1')
-
-            square[1] = mark;
-        else if (choice == 2 && square[2] == '2')
-
-            square[2] = mark;
-        else if (choice == 3 && square[3] == '3')
-
-            square[3] = mark;
-        else if (choice == 4 && square[4] == '4')
-
-            square[4] = mark;
-        else if (choice == 5 && square[5] == '5')
-
-            square[5] = mark;
-        else if (choice == 6 && square[6] == '6')
-
-            square[6] = mark;
-        else if (choice == 7 && square[7] == '7')
-
-            square[7] = mark;
-        else if (choice == 8 && square[8] == '8')
-
-            square[8] = mark;
-        else if (choice == 9 && square[9] == '9')
-
-            square[9] = mark;
-        else
-        {
-            cout<<"Invalid move ";
-
-            player--;
-            cin.ignore();
-            cin.get();
-        }
-        i=checkwin();
-
-        player++;
-    }while(i==-1);
-    board();
-    if(i==1)
-
-        cout<<"==>\aPlayer "<<--player<<" win ";
-    else
-        cout<<"==>\aGame draw";
-
-    cin.ignore();
-    cin.get();
-    return 0;
+	printf("The Optimal Move is :\n");
+	printf("ROW: %d COL: %d\n\n", bestMove.row,
+								bestMove.col );
+	return 0;
 }
-
-
-int checkwin()
-{
-    if (square[1] == square[2] && square[2] == square[3])
-
-        return 1;
-    else if (square[4] == square[5] && square[5] == square[6])
-
-        return 1;
-    else if (square[7] == square[8] && square[8] == square[9])
-
-        return 1;
-    else if (square[1] == square[4] && square[4] == square[7])
-
-        return 1;
-    else if (square[2] == square[5] && square[5] == square[8])
-
-        return 1;
-    else if (square[3] == square[6] && square[6] == square[9])
-
-        return 1;
-    else if (square[1] == square[5] && square[5] == square[9])
-
-        return 1;
-    else if (square[3] == square[5] && square[5] == square[7])
-
-        return 1;
-    else if (square[1] != '1' && square[2] != '2' && square[3] != '3'
-                    && square[4] != '4' && square[5] != '5' && square[6] != '6'
-                  && square[7] != '7' && square[8] != '8' && square[9] != '9')
-
-        return 0;
-    else
-        return -1;
-}
-
-
-
-void board()
-{
-    system("cls");
-    cout << "\n\n\tTic Tac Toe\n\n";
-
-    cout << "Player 1 (X)  -  Player 2 (O)" << endl << endl;
-    cout << endl;
-
-    cout << "     |     |     " << endl;
-    cout << "  " << square[1] << "  |  " << square[2] << "  |  " << square[3] << endl;
-
-    cout << "_____|_____|_____" << endl;
-    cout << "     |     |     " << endl;
-
-    cout << "  " << square[4] << "  |  " << square[5] << "  |  " << square[6] << endl;
-
-    cout << "_____|_____|_____" << endl;
-    cout << "     |     |     " << endl;
-
-    cout << "  " << square[7] << "  |  " << square[8] << "  |  " << square[9] << endl;
-
-    cout << "     |     |     " << endl << endl;
-}
-
-
